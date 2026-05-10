@@ -117,4 +117,4 @@ python3 -m py_compile src/**/*.py
 
 ## 许可证
 
-MIT
+MIT License | Copyright (c) 2026 [WindRiders](https://github.com/WindRiders)
