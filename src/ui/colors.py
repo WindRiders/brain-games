@@ -1,33 +1,69 @@
 """ANSI 颜色常量"""
 
-RESET = "\033[0m"
-BOLD = "\033[1m"
-UNDER = "\033[4m"
-REVERSE = "\033[7m"
+# 命名空间类，支持 `C.RESET` 等调用方式
+class C:
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    UNDER = "\033[4m"
+    BLINK = "\033[5m"
+    REVERSE = "\033[7m"
 
-BLACK = "\033[30m"
-RED = "\033[31m"
-GREEN = "\033[32m"
-YELLOW = "\033[33m"
-BLUE = "\033[34m"
-MAGENTA = "\033[35m"
-CYAN = "\033[36m"
-WHITE = "\033[37m"
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+    WHITE = "\033[37m"
 
-BRED = "\033[91m"
-BGREEN = "\033[92m"
-BYELLOW = "\033[93m"
-BBLUE = "\033[94m"
-BMAGENTA = "\033[95m"
-BCYAN = "\033[96m"
-BWHITE = "\033[97m"
+    BRED = "\033[91m"
+    BGREEN = "\033[92m"
+    BYELLOW = "\033[93m"
+    BBLUE = "\033[94m"
+    BMAGENTA = "\033[95m"
+    BCYAN = "\033[96m"
+    BWHITE = "\033[97m"
+    GRAY = "\033[90m"  # 灰色（用于墙壁等）
 
-BG_RED = "\033[41m"
-BG_GREEN = "\033[42m"
-BG_YELLOW = "\033[43m"
+    BG_RED = "\033[41m"
+    BG_GREEN = "\033[42m"
+    BG_YELLOW = "\033[43m"
+    BG_BLUE = "\033[44m"
+    BG_MAGENTA = "\033[45m"
+    BG_CYAN = "\033[46m"
 
-CLEAR_SCREEN = "\033[2J"
-HOME = "\033[H"
+    CLEAR_SCREEN = "\033[2J"
+    HOME = "\033[H"
+    HIDE_CURSOR = "\033[?25l"
+    SHOW_CURSOR = "\033[?25h"
 
-HIDE_CURSOR = "\033[?25l"
-SHOW_CURSOR = "\033[?25h"
+# 向后兼容：直接导入 RESET, BOLD 等也能用
+RESET = C.RESET
+BOLD = C.BOLD
+DIM = C.DIM
+UNDER = C.UNDER
+REVERSE = C.REVERSE
+BLACK = C.BLACK
+RED = C.RED
+GREEN = C.GREEN
+YELLOW = C.YELLOW
+BLUE = C.BLUE
+MAGENTA = C.MAGENTA
+CYAN = C.CYAN
+WHITE = C.WHITE
+BRED = C.BRED
+BGREEN = C.BGREEN
+BYELLOW = C.BYELLOW
+BBLUE = C.BBLUE
+BMAGENTA = C.BMAGENTA
+BCYAN = C.BCYAN
+BWHITE = C.BWHITE
+BG_RED = C.BG_RED
+BG_GREEN = C.BG_GREEN
+BG_YELLOW = C.BG_YELLOW
+CLEAR_SCREEN = C.CLEAR_SCREEN
+HOME = C.HOME
+HIDE_CURSOR = C.HIDE_CURSOR
+SHOW_CURSOR = C.SHOW_CURSOR
