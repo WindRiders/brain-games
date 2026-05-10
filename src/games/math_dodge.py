@@ -92,6 +92,8 @@ def generate_question(difficulty, max_val):
                     if a < b:
                         a, b = b, a
                     correct = a - b * c
+                    if correct < 0:
+                        correct = abs(correct)
                 question_str = f"{a}{op_inner}{b}×{c}"
             else:
                 a = random.randint(1, 15)
@@ -105,6 +107,8 @@ def generate_question(difficulty, max_val):
                     if a < b:
                         a, b = b, a
                     correct = (a - b) * c
+                if correct < 0:
+                    correct = abs(correct)
                 question_str = f"({a}{op_inner}{b})×{c}"
 
     # 生成错误答案
@@ -129,8 +133,10 @@ def _generate_wrong_answers(correct, max_val, count=3):
             wrongs.append(wrong)
 
     # 策略2: 随机填充
+    lo = max(0, correct - 10)
+    hi = max(lo + 1, min(correct + 10, max_val * 2))
     while len(wrongs) < count:
-        wrong = random.randint(max(0, correct - 10), correct + 10)
+        wrong = random.randint(lo, hi)
         if wrong != correct and wrong not in wrongs and wrong >= 0:
             wrongs.append(wrong)
 
