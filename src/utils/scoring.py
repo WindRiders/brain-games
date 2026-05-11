@@ -25,7 +25,12 @@ class ScoreManager:
         try:
             if os.path.exists(self._scores_file):
                 with open(self._scores_file, "r", encoding="utf-8") as f:
-                    self._data = json.load(f)
+                    data = json.load(f)
+                    # Handle cases where JSON is valid but not a dict (e.g. null, [], "string")
+                    if isinstance(data, dict):
+                        self._data = data
+                    else:
+                        self._data = {}
             else:
                 self._data = {}
         except (json.JSONDecodeError, IOError):
