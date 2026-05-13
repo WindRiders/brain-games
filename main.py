@@ -222,4 +222,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import subprocess
+    if len(sys.argv) > 1 and sys.argv[1] in ("-w", "--web"):
+        # 启动 Web 版
+        web_server = os.path.join(PROJECT_ROOT, "web", "server.py")
+        print("🧠 启动 Brain Games Web 版...")
+        subprocess.run([sys.executable, web_server])
+    else:
+        main()

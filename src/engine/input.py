@@ -36,15 +36,22 @@ class InputManager:
             # Windows: 使用 msvcrt
             import msvcrt
             self._msvcrt = msvcrt
+            self._tty_mode = False
         else:
-            # Linux/macOS: 使用 termios/tty
-            import tty
-            import termios
-            self._tty = tty
-            self._termios = termios
+            # Linux/macOS: 检查是否真实 TTY
             self._fd = sys.stdin.fileno()
-            self._old_settings = termios.tcgetattr(self._fd)
-            tty.setraw(self._fd)
+            if os.isatty(self._fd):
+                # 真实终端：使用 termios/tty 原始模式
+                import tty
+                import termios
+                self._tty = tty
+                self._termios = termios
+                self._old_settings = termios.tcgetattr(self._fd)
+                tty.setraw(self._fd)
+                self._tty_mode = True
+            else:
+                # 非 TTY 环境（管道、重定向、沙箱）：fallback 模式
+                self._tty_mode = False
 
         self._initialized = True
 
@@ -88,7 +95,8 @@ class InputManager:
             if ch == b"\xe0" or ch == b"\x00":  # 扩展键前缀
                 return self._read_escape_sequence()
             return ch.decode("utf-8", errors="replace")
-        else:
+        elif self._tty_mode:
+            # TTY 原始模式：逐字符读取
             ch = sys.stdin.read(1)
             if ch == "\x1b":  # Esc 前缀
                 result = self._read_escape_sequence()
@@ -96,6 +104,12 @@ class InputManager:
                     return "q"
                 return result
             return ch
+        else:
+            # 非 TTY fallback：行缓冲模式，读整行
+            line = sys.stdin.readline()
+            if not line:
+                return "q"  # EOF
+            return line.rstrip("\r\n")
 
     def get_key_nonblocking(self) -> str | None:
         """非阻塞获取按键
@@ -115,7 +129,7 @@ class InputManager:
             if ch == b"\xe0" or ch == b"\x00":
                 return self._read_escape_sequence()
             return ch.decode("utf-8", errors="replace")
-        else:
+        elif self._tty_mode:
             import select
             if not select.select([sys.stdin], [], [], 0)[0]:
                 return None
@@ -130,13 +144,22 @@ class InputManager:
                     return result
                 return "q"  # 单独的 Esc
             return ch
+        else:
+            # 非 TTY fallback：不阻塞，有数据即读整行
+            import select
+            if not select.select([sys.stdin], [], [], 0)[0]:
+                return None
+            line = sys.stdin.readline()
+            if not line:
+                return "q"  # EOF
+            return line.rstrip("\r\n")
 
     def cleanup(self):
         """恢复终端设置"""
         if not self._initialized:
             return
 
-        if self._platform == "posix" and self._old_settings is not None:
+        if self._platform == "posix" and self._tty_mode and self._old_settings is not None:
             self._termios.tcsetattr(self._fd, self._termios.TCSADRAIN, self._old_settings)
 
         self._initialized = False

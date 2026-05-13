@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brain Games — 脑力训练合集</title>
+<style>
+/* ============================================================
+   THEME — Dark Neon
+   ============================================================ */
+:root {
+  --bg: #0a0a1a;
+  --bg2: #12122a;
+  --bg3: #1a1a3a;
+  --fg: #e0e0f0;
+  --dim: #8080a0;
+  --accent: #00e5ff;
+  --accent2: #ff6ec7;
+  --gold: #ffd740;
+  --green: #69f0ae;
+  --red: #ff5252;
+  --orange: #ffab40;
+  --purple: #b388ff;
+  --radius: 12px;
+  --font: 'Segoe UI', system-ui, sans-serif;
+  --mono: 'Cascadia Code', 'Fira Code', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  display: flex; justify-content: center; align-items: center;
+  min-height: 100vh; overflow: hidden;
+}
+#app { width: 800px; max-width: 95vw; }
+
+/* Screens */
+.screen { display: none; flex-direction: column; align-items: center; gap: 16px; }
+.screen.active { display: flex; }
+
+/* Menu */
+.menu-title { font-size: 2.4em; font-weight: 900; letter-spacing: -1px; }
+.menu-title .b1 { color: var(--accent); } .menu-title .b2 { color: var(--accent2); }
+.menu-subtitle { color: var(--dim); font-size: 1.1em; }
+.game-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; width: 100%; max-width: 640px;
+}
+.game-card {
+  background: var(--bg2); border: 2px solid var(--bg3);
+  border-radius: var(--radius); padding: 16px 18px;
+  cursor: pointer; transition: all 0.2s;
+  text-align: left;
+}
+.game-card:hover {
+  border-color: var(--accent); transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,229,255,0.15);
+}
+.game-card .num {
+  display: inline-block; width: 28px; height: 28px;
+  background: var(--accent); color: var(--bg);
+  border-radius: 50%; text-align: center; line-height: 28px;
+  font-weight: 700; font-size: 0.85em; margin-right: 8px;
+}
+.game-card h3 { font-size: 1.05em; margin-bottom: 4px; }
+.game-card p { font-size: 0.8em; color: var(--dim); }
+
+/* Buttons */
+.btn {
+  background: var(--bg3); color: var(--fg); border: 2px solid var(--bg3);
+  padding: 10px 24px; border-radius: 8px; font-size: 1em;
+  cursor: pointer; transition: all 0.2s; font-family: var(--font);
+}
+.btn:hover { border-color: var(--accent); }
+.btn.accent { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; }
+.btn.accent:hover { background: #00d0ea; }
+.btn.danger { border-color: var(--red); color: var(--red); }
+.btn.danger:hover { background: var(--red); color: #fff; }
+.btn.small { padding: 6px 14px; font-size: 0.85em; }
+
+/* Difficulty */
+.diff-btns { display: flex; gap: 12px; }
+.diff-btn {
+  padding: 16px 32px; border-radius: var(--radius);
+  background: var(--bg2); border: 2px solid var(--bg3);
+  cursor: pointer; text-align: center; transition: all 0.2s;
+}
+.diff-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+.diff-btn h3 { font-size: 1.2em; margin-bottom: 4px; }
+.diff-btn p { font-size: 0.8em; color: var(--dim); }
+
+/* Game area */
+.game-header {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; padding: 0 8px;
+}
+.game-header .score { font-size: 1.4em; font-weight: 700; color: var(--gold); }
+.game-header .info { color: var(--dim); font-size: 0.9em; }
+.game-header .lives { color: var(--red); }
+canvas { border-radius: var(--radius); background: var(--bg2); display: block; }
+
+/* Overlay */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  display: flex; justify-content: center; align-items: center; z-index: 10;
+}
+.overlay-box {
+  background: var(--bg2); border: 2px solid var(--accent);
+  border-radius: var(--radius); padding: 32px 40px;
+  text-align: center; max-width: 420px;
+}
+.overlay-box h2 { font-size: 1.6em; margin-bottom: 12px; }
+.overlay-box .big-score { font-size: 3em; font-weight: 900; color: var(--gold); }
+.overlay-box .new-record { color: var(--accent2); font-weight: 700; margin: 8px 0; }
+.overlay-btns { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+
+/* Text-based games */
+.text-box {
+  background: var(--bg2); border: 2px solid var(--bg3);
+  border-radius: var(--radius); padding: 20px;
+  width: 100%; max-width: 640px; min-height: 200px;
+  line-height: 1.7; white-space: pre-wrap; font-size: 0.95em;
+}
+.choice-btn {
+  display: block; width: 100%; text-align: left; padding: 10px 16px;
+  margin: 6px 0; background: var(--bg3); border: 1px solid var(--bg3);
+  border-radius: 8px; color: var(--fg); cursor: pointer;
+  font-family: var(--font); font-size: 0.9em; transition: all 0.15s;
+}
+.choice-btn:hover { border-color: var(--accent); background: #22224a; }
+.input-row { display: flex; gap: 10px; margin-top: 12px; }
+.input-row input {
+  flex: 1; background: var(--bg3); border: 2px solid var(--bg3);
+  border-radius: 8px; padding: 10px 14px; color: var(--fg);
+  font-family: var(--mono); font-size: 1em; outline: none;
+}
+.input-row input:focus { border-color: var(--accent); }
+
+/* Whack grid */
+.whack-grid {
+  display: grid; grid-template-columns: repeat(3, 120px);
+  gap: 12px; justify-content: center;
+}
+.whack-hole {
+  width: 120px; height: 120px; background: var(--bg3);
+  border-radius: 50%; cursor: pointer; transition: all 0.1s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3em; user-select: none;
+}
+.whack-hole.active { background: var(--accent2); transform: scale(1.1); }
+.whack-hole.hit { background: var(--green); }
+.whack-hole.miss { background: var(--red); }
+
+/* Scoreboard */
+.score-table { width: 100%; max-width: 500px; }
+.score-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px; border-bottom: 1px solid var(--bg3);
+}
+.score-row .name { font-weight: 600; }
+.score-row .vals { color: var(--dim); font-size: 0.85em; }
+.score-row .best { color: var(--gold); font-weight: 700; }
+
+/* Help */
+.help-bar { color: var(--dim); font-size: 0.8em; text-align: center; }
+
+/* Pulse animation */
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.pulse { animation: pulse 1s infinite; }
+
+/* Countdown */
+.countdown {
+  position: fixed; inset: 0; display: flex;
+  justify-content: center; align-items: center; z-index: 20;
+  pointer-events: none;
+}
+.countdown .num { font-size: 8em; font-weight: 900; color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ============================================================
+//  API
+// ============================================================
+const API = {
+  async getScores() { const r = await fetch('/api/scores'); return r.json(); },
+  async getHighScore(game, difficulty) {
+    const r = await fetch(`/api/highscore?game=${game}&difficulty=${difficulty}`);
+    return (await r.json()).high_score;
+  },
+  async saveScore(game, difficulty, score) {
+    const r = await fetch('/api/scores', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({game, difficulty, score})
+    });
+    return r.json();
+  },
+  async resetScores() {
+    await fetch('/api/scores/reset', {method: 'POST'});
+  }
+};
+
+// ============================================================
+//  App State
+// ============================================================
+const state = {
+  screen: 'menu',
+  gameId: 0,
+  difficulty: 'normal',
+  scores: {},
+  currentScore: 0,
+  highScore: 0,
+};
+
+const DIFFICULTIES = {
+  easy:   { name: '简单', desc: '轻松上手',   color: '#69f0ae' },
+  normal: { name: '普通', desc: '适度挑战',   color: '#ffd740' },
+  hard:   { name: '困难', desc: '极限脑力',   color: '#ff5252' },
+};
+
+// ============================================================
+//  Render Engine
+// ============================================================
+const $ = (sel) => document.querySelector(sel);
+const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className=cls; if(html) e.innerHTML=html; return e; };
+
+function render() {
+  const app = $('#app');
+  app.innerHTML = '';
+
+  switch(state.screen) {
+    case 'menu': renderMenu(app); break;
+    case 'difficulty': renderDifficulty(app); break;
+    case 'game': renderGame(app); break;
+    case 'scoreboard': renderScoreboard(app); break;
+  }
+}
+
+// ---- MENU ----
+function renderMenu(app) {
+  const games = [
+    { id:1, name:'记忆迷宫',   desc:'观看迷宫后凭记忆走出',         color: '#00e5ff' },
+    { id:2, name:'弹幕大脑',   desc:'躲避错误答案,碰正确答案',       color: '#69f0ae' },
+    { id:3, name:'密码破译',   desc:'破解层层加密的密文',           color: '#ffd740' },
+    { id:4, name:'节奏大师',   desc:'跟随节拍精准按键',             color: '#ff6ec7' },
+    { id:5, name:'打地鼠',     desc:'快速反应击打目标',             color: '#ffab40' },
+    { id:6, name:'故事解谜',   desc:'文字冒险推理破案',             color: '#b388ff' },
+    { id:7, name:'贪吃蛇记忆', desc:'按顺序吃苹果的贪吃蛇',          color: '#ff5252' },
+  ];
+
+  app.innerHTML = `
+    <div class="screen active" style="gap:20px">
+      <div class="menu-title"><span class="b1">Brain</span> <span class="b2">Games</span></div>
+      <div class="menu-subtitle">🧠 终端脑力训练合集 — 浏览器版</div>
+      <div class="game-grid">
+        ${games.map(g => `
+          <div class="game-card" data-game="${g.id}">
+            <span class="num" style="background:${g.color}">${g.id}</span>
+            <span><h3 style="display:inline">${g.name}</h3></span>
+            <p>${g.desc}</p>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn" id="btn-scores">🏆 最高分</button>
+        <button class="btn danger small" id="btn-reset">重置分数</button>
+      </div>
+    </div>`;
+
+  app.querySelectorAll('.game-card').forEach(card => {
+    card.addEventListener('click', () => {
+      state.gameId = parseInt(card.dataset.game);
+      state.screen = 'difficulty';
+      render();
+    });
+  });
+  $('#btn-scores').addEventListener('click', () => { state.screen = 'scoreboard'; render(); });
+  $('#btn-reset').addEventListener('click', async () => {
+    if (confirm('确定要重置所有分数吗？')) { await API.resetScores(); state.scores = {}; render(); }
+  });
+}
+
+// ---- DIFFICULTY ----
+function renderDifficulty(app) {
+  const names = {1:'记忆迷宫',2:'弹幕大脑',3:'密码破译',4:'节奏大师',5:'打地鼠',6:'故事解谜',7:'贪吃蛇记忆'};
+  app.innerHTML = `
+    <div class="screen active" style="gap:24px">
+      <h2 style="color:var(--accent)">选择难度 — ${names[state.gameId]}</h2>
+      <div class="diff-btns">
+        ${Object.entries(DIFFICULTIES).map(([key, d]) => `
+          <div class="diff-btn" data-diff="${key}">
+            <h3 style="color:${d.color}">${d.name}</h3>
+            <p>${d.desc}</p>
+          </div>`).join('')}
+      </div>
+      <button class="btn" id="btn-back">← 返回主菜单</button>
+    </div>`;
+
+  app.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.difficulty = btn.dataset.diff;
+      state.screen = 'game';
+      state.currentScore = 0;
+      startGame();
+    });
+  });
+  $('#btn-back').addEventListener('click', () => { state.screen = 'menu'; render(); });
+}
+
+// ---- SCOREBOARD ----
+async function renderScoreboard(app) {
+  const data = await API.getScores();
+  state.scores = data;
+  const names = {1:'记忆迷宫',2:'弹幕大脑',3:'密码破译',4:'节奏大师',5:'打地鼠',6:'故事解谜',7:'贪吃蛇记忆'};
+
+  let rows = '';
+  for (let i = 1; i <= 7; i++) {
+    const gs = data[i] || {};
+    rows += `<div class="score-row">
+      <span class="name">${i}. ${names[i]}</span>
+      <span class="vals">
+        简单: <span class="best">${gs.easy || 0}</span> &nbsp;
+        普通: <span class="best">${gs.normal || 0}</span> &nbsp;
+        困难: <span class="best">${gs.hard || 0}</span>
+      </span></div>`;
+  }
+  if (!rows) rows = '<div style="color:var(--dim);padding:20px;text-align:center">暂无分数记录</div>';
+
+  app.innerHTML = `
+    <div class="screen active" style="gap:16px">
+      <h2 style="color:var(--gold)">🏆 最高分</h2>
+      <div class="score-table">${rows}</div>
+      <button class="btn" id="btn-back2">← 返回</button>
+    </div>`;
+  $('#btn-back2').addEventListener('click', () => { state.screen = 'menu'; render(); });
+}
+
+// ============================================================
+//  Game Framework
+// ============================================================
+let activeGame = null;
+
+class BaseGame {
+  constructor() { this.score = 0; this.running = false; this.done = false; }
+  start() { this.running = true; this.score = 0; this.done = false; }
+  stop() { this.running = false; }
+  handleInput(key) {}
+  update() {}
+}
+
+async function startGame() {
+  const app = $('#app');
+
+  switch(state.gameId) {
+    case 1: activeGame = new MazeGame(); break;
+    case 2: activeGame = new MathDodgeGame(); break;
+    case 3: activeGame = new CodeBreakerGame(); break;
+    case 4: activeGame = new RhythmGame(); break;
+    case 5: activeGame = new WhackGame(); break;
+    case 6: activeGame = new StoryGame(); break;
+    case 7: activeGame = new MemorySnakeGame(); break;
+    default: activeGame = new MazeGame();
+  }
+
+  activeGame.difficulty = state.difficulty;
+  activeGame.start();
+
+  // Load high score
+  const names = {1:'maze',2:'mathdodge',3:'codebreaker',4:'rhythm',5:'whack',6:'story',7:'snake'};
+  state.highScore = await API.getHighScore(names[state.gameId] || 'maze', state.difficulty);
+
+  activeGame.renderDOM(app);
+}
+
+function endGame(finalScore) {
+  activeGame.stop();
+  state.currentScore = finalScore;
+
+  const names = {1:'maze',2:'mathdodge',3:'codebreaker',4:'rhythm',5:'whack',6:'story',7:'snake'};
+  API.saveScore(names[state.gameId], state.difficulty, finalScore).then(result => {
+    const app = $('#app');
+    const isNew = result.is_new_high;
+    const gnames = {1:'记忆迷宫',2:'弹幕大脑',3:'密码破译',4:'节奏大师',5:'打地鼠',6:'故事解谜',7:'贪吃蛇记忆'};
+
+    app.innerHTML = '';
+    const overlay = el('div', 'overlay');
+    overlay.innerHTML = `
+      <div class="overlay-box">
+        <h2>${gnames[state.gameId]} — ${DIFFICULTIES[state.difficulty].name}</h2>
+        <div class="big-score">${finalScore}</div>
+        ${isNew ? '<div class="new-record">🎉 新纪录!</div>' : ''}
+        <div style="color:var(--dim)">最高分: ${result.high_score}</div>
+        <div class="overlay-btns">
+          <button class="btn accent" id="btn-retry">🔄 再来一次</button>
+          <button class="btn" id="btn-menu">🏠 主菜单</button>
+        </div>
+      </div>`;
+    app.appendChild(overlay);
+
+    $('#btn-retry').addEventListener('click', () => {
+      overlay.remove();
+      state.screen = 'game';
+      state.currentScore = 0;
+      startGame();
+    });
+    $('#btn-menu').addEventListener('click', () => {
+      overlay.remove();
+      state.screen = 'menu';
+      render();
+    });
+  });
+}
+
+// ============================================================
+//  GAME 1: 记忆迷宫 (Canvas)
+// ============================================================
+class MazeGame extends BaseGame {
+  start() {
+    super.start();
+    const sizes = {easy: {w:11,h:11,mem:4000}, normal: {w:17,h:17,mem:5000}, hard: {w:23,h:23,mem:6000}};
+    const cfg = sizes[this.difficulty];
+    this.mazeW = cfg.w; this.mazeH = cfg.h;
+    this.cellSize = this.difficulty === 'hard' ? 20 : this.difficulty === 'normal' ? 28 : 40;
+    this.canvasW = this.mazeW * this.cellSize;
+    this.canvasH = this.mazeH * this.cellSize;
+    this.memTime = cfg.mem;
+    this.phase = 'memorize'; // memorize | play
+    this.memStart = Date.now();
+    this.player = {x: 1, y: 1};
+    this.exit = {x: this.mazeW-2, y: this.mazeH-2};
+    this.maze = this._generate();
+  }
+
+  _generate() {
+    const w = this.mazeW, h = this.mazeH;
+    const m = Array.from({length: h}, () => Array(w).fill(1));
+    const stack = [{x:1, y:1}];
+    m[1][1] = 0;
+    while (stack.length) {
+      const cur = stack[stack.length-1];
+      const dirs = [[0,-2],[0,2],[-2,0],[2,0]];
+      const neigh = dirs
+        .map(([dx,dy]) => ({x:cur.x+dx, y:cur.y+dy}))
+        .filter(({x,y}) => x>0 && x<w-1 && y>0 && y<h-1 && m[y][x]===1);
+      if (neigh.length) {
+        const n = neigh[Math.floor(Math.random()*neigh.length)];
+        m[(cur.y+n.y)/2][(cur.x+n.x)/2] = 0;
+        m[n.y][n.x] = 0;
+        stack.push(n);
+      } else { stack.pop(); }
+    }
+    return m;
+  }
+
+  renderDOM(app) {
+    app.innerHTML = `
+      <div class="screen active" style="gap:8px">
+        <div class="game-header">
+          <span class="info" id="maze-phase">🔍 记忆阶段...</span>
+          <span class="score" id="maze-score">0</span>
+        </div>
+        <canvas id="maze-canvas" width="${this.canvasW}" height="${this.canvasH}"></canvas>
+        <div class="help-bar">方向键移动 | Q 退出</div>
+      </div>`;
+    this.canvas = $('#maze-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this._draw();
+    this._loop();
+  }
+
+  _loop() {
+    if (!this.running) return;
+    if (this.phase === 'memorize') {
+      const elapsed = Date.now() - this.memStart;
+      $('#maze-phase').textContent = `🔍 记忆迷宫 ${Math.ceil((this.memTime-elapsed)/1000)}s`;
+      if (elapsed >= this.memTime) {
+        this.phase = 'play';
+        $('#maze-phase').textContent = `🚶 凭记忆走出迷宫!`;
+      }
+    }
+    this._draw();
+    if (this.running) requestAnimationFrame(() => this._loop());
+  }
+
+  _draw() {
+    const ctx = this.ctx, cs = this.cellSize, m = this.maze;
+    ctx.clearRect(0, 0, this.canvasW, this.canvasH);
+    // Draw maze
+    for (let y = 0; y < this.mazeH; y++) {
+      for (let x = 0; x < this.mazeW; x++) {
+        if (this.phase === 'play' && m[y][x] === 1) {
+          ctx.fillStyle = '#1a1a3a';
+          ctx.fillRect(x*cs, y*cs, cs, cs);
+        } else if (m[y][x] === 1) {
+          ctx.fillStyle = '#2a2a5a';
+          ctx.fillRect(x*cs, y*cs, cs, cs);
+        }
+      }
+    }
+    // Exit
+    ctx.fillStyle = '#69f0ae';
+    ctx.fillRect(this.exit.x*cs+2, this.exit.y*cs+2, cs-4, cs-4);
+    ctx.fillStyle = '#000';
+    ctx.font = `${cs/2}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('出', this.exit.x*cs+cs/2, this.exit.y*cs+cs/2+cs/6);
+    // Player (always visible so they know where they are, even in memorize)
+    ctx.fillStyle = '#00e5ff';
+    ctx.beginPath();
+    ctx.arc(this.player.x*cs+cs/2, this.player.y*cs+cs/2, cs/3, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  handleInput(key) {
+    if (this.phase !== 'play') return;
+    const dx = key==='ArrowRight'?1:key==='ArrowLeft'?-1:0;
+    const dy = key==='ArrowDown'?1:key==='ArrowUp'?-1:0;
+    const nx = this.player.x + dx, ny = this.player.y + dy;
+    if (nx>=0 && nx<this.mazeW && ny>=0 && ny<this.mazeH && this.maze[ny][nx]===0) {
+      this.player.x = nx; this.player.y = ny;
+      if (nx === this.exit.x && ny === this.exit.y) {
+        const bonus = this.difficulty==='hard'?300:this.difficulty==='normal'?200:100;
+        this.score = bonus;
+        this.stop();
+        endGame(this.score);
+      }
+    }
+  }
+}
+
+// ============================================================
+//  GAME 2: 弹幕大脑 (Canvas)
+// ============================================================
+class MathDodgeGame extends BaseGame {
+  start() {
+    super.start();
+    this.canvasW = 640; this.canvasH = 480;
+    this.player = {x: 320, y: 420, r: 16, speed: 5};
+    this.bullets = [];
+    this.spawnTimer = 0;
+    this.spawnInterval = this.difficulty==='hard'?30:this.difficulty==='normal'?40:55;
+    this.lives = this.difficulty==='hard'?1:this.difficulty==='normal'?2:3;
+    this.combo = 0;
+    this.keys = {};
+  }
+
+  _mathProblem() {
+    const a = Math.floor(Math.random()*20)+1;
+    const b = Math.floor(Math.random()*20)+1;
+    const ops = ['+','-','*'];
+    const op = ops[Math.floor(Math.random()*ops.length)];
+    const expr = `${a} ${op} ${b}`;
+    const correct = eval(expr);
+    // Wrong answers
+    const wrongs = [];
+    while (wrongs.length < 2) {
+      let w = correct + (Math.random()>0.5?1:-1)*(Math.floor(Math.random()*15)+1);
+      if (w !== correct && w > 0 && !wrongs.includes(w)) wrongs.push(w);
+    }
+    const all = [correct, ...wrongs].sort(()=>Math.random()-0.5);
+    return {expr, correct, answers: all};
+  }
+
+  renderDOM(app) {
+    app.innerHTML = `
+      <div class="screen active" style="gap:8px">
+        <div class="game-header">
+          <span class="lives" id="md-lives">❤️ x${this.lives}</span>
+          <span class="score" id="md-score">0</span>
+          <span class="info" id="md-combo"></span>
+        </div>
+        <canvas id="md-canvas" width="${this.canvasW}" height="${this.canvasH}"></canvas>
+        <div class="help-bar">WASD/方向键 移动 | 碰正确数字得分</div>
+      </div>`;
+    this.canvas = $('#md-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this._bindInput();
+    this._loop();
+  }
+
+  _bindInput() {
+    window._mdKeyDown = (e) => { this.keys[e.key] = true; e.preventDefault(); };
+    window._mdKeyUp = (e) => { this.keys[e.key] = false; };
+    document.addEventListener('keydown', window._mdKeyDown);
+    document.addEventListener('keyup', window._mdKeyUp);
+  }
+
+  _unbindInput() {
+    document.removeEventListener('keydown', window._mdKeyDown);
+    document.removeEventListener('keyup', window._mdKeyUp);
+  }
+
+  _loop() {
+    if (!this.running) { this._unbindInput(); return; }
+    this.update();
+    this._draw();
+    if (this.running) requestAnimationFrame(() => this._loop());
+  }
+
+  update() {
+    // Move player
+    let dx=0, dy=0;
+    if (this.keys['ArrowLeft']||this.keys['a']||this.keys['A']) dx=-1;
+    if (this.keys['ArrowRight']||this.keys['d']||this.keys['D']) dx=1;
+    if (this.keys['ArrowUp']||this.keys['w']||this.keys['W']) dy=-1;
+    if (this.keys['ArrowDown']||this.keys['s']||this.keys['S']) dy=1;
+    this.player.x += dx*this.player.speed;
+    this.player.y += dy*this.player.speed;
+    this.player.x = Math.max(this.player.r, Math.min(this.canvasW-this.player.r, this.player.x));
+    this.player.y = Math.max(this.player.r, Math.min(this.canvasH-this.player.r, this.player.y));
+
+    // Spawn bullets
+    this.spawnTimer++;
+    if (this.spawnTimer >= this.spawnInterval) {
+      this.spawnTimer = 0;
+      const p = this._mathProblem();
+      const x = Math.random()*(this.canvasW-80)+40;
+      this.bullets.push({
+        x, y: -20, r: 18, speed: this.difficulty==='hard'?3:2,
+        text: p.answers[Math.floor(Math.random()*p.answers.length)].toString(),
+        correct: p.correct,
+        value: p.answers[Math.floor(Math.random()*p.answers.length)],
+        expr: p.expr,
+        correctAnswer: p.correct,
+      });
+    }
+
+    // Move bullets & check collision
+    this.bullets = this.bullets.filter(b => {
+      b.y += b.speed;
+      if (b.y > this.canvasH + 30) return false;
+      // Collision
+      const dist = Math.hypot(this.player.x-b.x, this.player.y-b.y);
+      if (dist < this.player.r + b.r) {
+        if (b.value === b.correctAnswer) {
+          this.score += 10 * (1 + this.combo);
+          this.combo++;
+          $('#md-combo').textContent = `🔥 x${this.combo}`;
+        } else {
+          this.lives--;
+          this.combo = 0;
+          $('#md-lives').textContent = `❤️ x${this.lives}`;
+          $('#md-combo').textContent = '';
+          if (this.lives <= 0) { this.stop(); endGame(this.score); }
+        }
+        return false;
+      }
+      return true;
+    });
+
+    $('#md-score').textContent = this.score;
+  }
+
+  _draw() {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this.canvasW, this.canvasH);
+    // Player
+    ctx.fillStyle = '#00e5ff';
+    ctx.beginPath();
+    ctx.arc(this.player.x, this.player.y, this.player.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#0a0a1a';
+    ctx.beginPath();
+    ctx.arc(this.player.x, this.player.y, this.player.r-4, 0, Math.PI*2);
+    ctx.fill();
+    // Bullets
+    for (const b of this.bullets) {
+      const isCorrect = b.value === b.correctAnswer;
+      ctx.fillStyle = isCorrect ? '#69f0ae' : '#ff5252';
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(b.text, b.x, b.y);
+    }
+    // Question display
+    if (this.bullets.length > 0) {
+      ctx.fillStyle = '#ffd740';
+      ctx.font = '18px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`计算: ${this.bullets[this.bullets.length-1].expr} = ?`, this.canvasW/2, 30);
+    }
+  }
+
+  stop() {
+    super.stop();
+    this._unbindInput();
+  }
+}
+
+// ============================================================
+//  GAME 3: 密码破译 (DOM)
+// ============================================================
+class CodeBreakerGame extends BaseGame {
+  start() {
+    super.start();
+    this.level = 0;
+    this.totalLevels = this.difficulty==='hard'?10:this.difficulty==='normal'?7:5;
+    this.hintsLeft = this.difficulty==='hard'?1:this.difficulty==='normal'?2:3;
+    this.timeLeft = this.difficulty==='hard'?20:this.difficulty==='normal'?30:45;
+    this.timerInterval = null;
+    this._generateLevels();
+  }
+
+  _caesar(str, shift) { return str.split('').map(c=>{ const cc=c.charCodeAt(0); if(cc>=65&&cc<=90)return String.fromCharCode((cc-65+shift)%26+65); if(cc>=97&&cc<=122)return String.fromCharCode((cc-97+shift)%26+97); return c; }).join(''); }
+  _reverse(str) { return str.split('').reverse().join(''); }
+
+  _generateLevels() {
+    const words = ['PYTHON','CODING','CIPHER','SECRET','HIDDEN','MASTER','GENIUS','RIDDLE','DECODE','ENCRYPT'];
+    this.levels = [];
+    for (let i = 0; i < this.totalLevels; i++) {
+      const word = words[i % words.length];
+      const shift = Math.floor(Math.random()*25)+1;
+      const encrypted = this._caesar(word, shift);
+      this.levels.push({ encrypted, answer: word, shift, hint: `凯撒密码,偏移量 ${shift}` });
+    }
+  }
+
+  renderDOM(app) {
+    app.innerHTML = `
+      <div class="screen active" style="gap:12px">
+        <div class="game-header">
+          <span class="info" id="cb-level">第 1/${this.totalLevels} 关</span>
+          <span class="score" id="cb-score">0</span>
+          <span class="info" id="cb-timer">⏱ ${this.timeLeft}s</span>
+        </div>
+        <div class="text-box" id="cb-box">
+          <div style="text-align:center;margin-bottom:12px">
+            <span style="color:var(--dim);font-size:0.85em">破解以下密文:</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:2em;text-align:center;color:var(--accent);letter-spacing:6px" id="cb-cipher"></div>
+          <div id="cb-hint" style="text-align:center;color:var(--dim);margin-top:8px;min-height:20px"></div>
+        </div>
+        <div class="input-row" style="max-width:400px">
+          <input id="cb-input" placeholder="输入原文..." autofocus>
+          <button class="btn accent" id="cb-submit">提交</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn small" id="cb-hint-btn">💡 提示 (${this.hintsLeft})</button>
+          <button class="btn small danger" id="cb-quit">退出</button>
+        </div>
+      </div>`;
+    this._showLevel();
+    this._startTimer();
+    this._bind();
+  }
+
+  _showLevel() {
+    const lv = this.levels[this.level];
+    $('#cb-level').textContent = `第 ${this.level+1}/${this.totalLevels} 关`;
+    $('#cb-cipher').textContent = lv.encrypted;
+    $('#cb-hint').textContent = '';
+    $('#cb-input').value = '';
+    $('#cb-input').focus();
+  }
+
+  _startTimer() {
+    this.timeLeft = this.difficulty==='hard'?20:this.difficulty==='normal'?30:45;
+    $('#cb-timer').textContent = `⏱ ${this.timeLeft}s`;
+    clearInterval(this.timerInterval);
+    this.timerInterval = setInterval(() => {
+      this.timeLeft--;
+      $('#cb-timer').textContent = `⏱ ${this.timeLeft}s`;
+      if (this.timeLeft <= 0) { clearInterval(this.timerInterval); this._timeUp(); }
+    }, 1000);
+  }
+
+  _bind() {
+    $('#cb-submit').addEventListener('click', () => this._check());
+    $('#cb-input').addEventListener('keydown', (e) => { if (e.key==='Enter') this._check(); });
+    $('#cb-hint-btn').addEventListener('click', () => {
+      if (this.hintsLeft > 0) {
+        this.hintsLeft--;
+        $('#cb-hint').textContent = `💡 ${this.levels[this.level].hint}`;
+        $('#cb-hint-btn').textContent = `💡 提示 (${this.hintsLeft})`;
+      }
+    });
+    $('#cb-quit').addEventListener('click', () => { this.stop(); clearInterval(this.timerInterval); state.screen='menu'; render(); });
+  }
+
+  _check() {
+    const input = $('#cb-input').value.trim().toUpperCase();
+    const answer = this.levels[this.level].answer;
+    if (input === answer) {
+      this.score += 100 + this.timeLeft * 5;
+      $('#cb-score').textContent = this.score;
+      this.level++;
+      if (this.level >= this.totalLevels) {
+        clearInterval(this.timerInterval);
+        this.stop();
+        endGame(this.score);
+      } else {
+        clearInterval(this.timerInterval);
+        this._showLevel();
+        this._startTimer();
+      }
+    } else {
+      $('#cb-input').style.borderColor = 'var(--red)';
+      setTimeout(() => { $('#cb-input').style.borderColor = ''; }, 300);
+    }
+  }
+
+  _timeUp() {
+    this.stop();
+    endGame(this.score);
+  }
+
+  stop() { super.stop(); clearInterval(this.timerInterval); }
+}
+
+// ============================================================
+//  GAME 4: 节奏大师 (Canvas)
+// ============================================================
+class RhythmGame extends BaseGame {
+  start() {
+    super.start();
+    this.canvasW = 640; this.canvasH = 480;
+    this.lanes = [120, 240, 360, 480]; // x positions for 4 lanes
+    this.keys = ['d','f','j','k'];
+    this.notes = [];
+    this.noteSpeed = this.difficulty==='hard'?4.5:this.difficulty==='normal'?3:2;
+    this.combo = 0;
+    this.maxCombo = 0;
+    this.totalNotes = this.difficulty==='hard'?40:this.difficulty==='normal'?30:20;
+    this.spawnedCount = 0;
+    this.spawnTimer = 0;
+    this.spawnInterval = this.difficulty==='hard'?25:this.difficulty==='normal'?35:50;
+    this.hitLine = this.canvasH - 80;
+  }
+
+  renderDOM(app) {
+    app.innerHTML = `
+      <div class="screen active" style="gap:8px">
+        <div class="game-header">
+          <span class="info" id="rh-combo"></span>
+          <span class="score" id="rh-score">0</span>
+          <span class="info" id="rh-progress"></span>
+        </div>
+        <canvas id="rh-canvas" width="${this.canvasW}" height="${this.canvasH}"></canvas>
+        <div class="help-bar" style="letter-spacing:8px;font-size:1.1em">
+          <span style="color:var(--red);font-weight:700">D</span>&nbsp;&nbsp;
+          <span style="color:var(--green);font-weight:700">F</span>&nbsp;&nbsp;
+          <span style="color:var(--accent);font-weight:700">J</span>&nbsp;&nbsp;
+          <span style="color:var(--accent2);font-weight:700">K</span>
+        </div>
+      </div>`;
+    this.canvas = $('#rh-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this._bindInput();
+    this._loop();
+  }
+
+  _bindInput() {
+    window._rhKey = (e) => {
+      const idx = this.keys.indexOf(e.key);
+      if (idx >= 0) {
+        e.preventDefault();
+        this._hit(idx);
+      }
+    };
+    document.addEventListener('keydown', window._rhKey);
+  }
+
+  _unbindInput() {
+    document.removeEventListener('keydown', window._rhKey);
+  }
+
+  _hit(laneIdx) {
+    // Find closest note in this lane near hit line
+    let bestNote = null, bestDist = 60;
+    for (const n of this.notes) {
+      if (n.lane === laneIdx && !n.hit) {
+        const dist = Math.abs(n.y - this.hitLine);
+        if (dist < bestDist) { bestNote = n; bestDist = dist; }
+      }
+    }
+    if (bestNote) {
+      bestNote.hit = true;
+      if (bestDist < 20) { this.score += 100; this.combo++; } // Perfect
+      else if (bestDist < 40) { this.score += 50; this.combo++; } // Good
+      else { this.score += 25; this.combo = 0; } // OK
+      if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+      $('#rh-combo').textContent = this.combo > 1 ? `🔥 ${this.combo}` : '';
+      $('#rh-score').textContent = this.score;
+    }
+  }
+
+  _loop() {
+    if (!this.running) { this._unbindInput(); return; }
+    this.update();
+    this._draw();
+    if (this.running) requestAnimationFrame(() => this._loop());
+  }
+
+  update() {
+    // Spawn
+    this.spawnTimer++;
+    if (this.spawnTimer >= this.spawnInterval && this.spawnedCount < this.totalNotes) {
+      this.spawnTimer = 0;
+      this.spawnedCount++;
+      this.notes.push({ y: -30, lane: Math.floor(Math.random()*4), hit: false, missed: false });
+      $('#rh-progress').textContent = `${this.spawnedCount}/${this.totalNotes}`;
+    }
+
+    // Move notes
+    for (const n of this.notes) {
+      n.y += this.noteSpeed;
+      if (!n.hit && n.y > this.hitLine + 50) {
+        n.missed = true;
+        this.combo = 0;
+        $('#rh-combo').textContent = '';
+      }
+    }
+
+    // Remove old notes
+    this.notes = this.notes.filter(n => n.y < this.canvasH + 50);
+
+    // End
+    if (this.spawnedCount >= this.totalNotes && this.notes.length === 0) {
+      this.score += this.maxCombo * 10;
+      endGame(this.score);
+    }
+  }
+
+  _draw() {
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, this.canvasW, this.canvasH);
+    // Lanes
+    ctx.strokeStyle = '#2a2a5a';
+    ctx.lineWidth = 1;
+    for (const lx of this.lanes) {
+      ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, this.canvasH); ctx.stroke();
+    }
+    // Hit line
+    ctx.strokeStyle = '#ffd740';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(60, this.hitLine); ctx.lineTo(this.canvasW-60, this.hitLine); ctx.stroke();
+    // Notes
+    const colors = ['#ff5252','#69f0ae','#00e5ff','#ff6ec7'];
+    for (const n of this.notes) {
+      if (n.hit || n.missed) continue;
+      const x = this.lanes[n.lane];
+      ctx.fillStyle = colors[n.lane];
+      ctx.beginPath();
+      ctx.arc(x, n.y, 22, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.keys[n.lane].toUpperCase(), x, n.y);
+    }
+    // Lane labels
+    ctx.fillStyle = '#404070';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    this.lanes.forEach((lx, i) => {
+      ctx.fillText(this.keys[i].toUpperCase(), lx, this.canvasH-15);
+    });
+  }
+
+  stop() { super.stop(); this._unbindInput(); }
+}
+
+// ============================================================
+//  GAME 5: 打地鼠 (DOM)
+// ============================================================
+class WhackGame extends BaseGame {
+  start() {
+    super.start();
+    this.rounds = this.difficulty==='hard'?25:this.difficulty==='normal'?18:12;
+    this.roundTime = this.difficulty==='hard'?800:this.difficulty==='normal'?1000:1200;
+    this.currentRound = 0;
+    this.hits = 0;
+    this.misses = 0;
+    this.activeHole = -1;
+    this.timerInterval = null;
+    this.roundTimer = null;
+  }
+
+  renderDOM(app) {
+    app.innerHTML = `
+      <div class="screen active" style="gap:12px">
+        <div class="game-header">
+          <span class="info" id="wk-rounds">第 0/${this.rounds} 轮</span>
+          <span class="score" id="wk-score">0</span>
+          <span class="info">命中: <span id="wk-hits" style="color:var(--green)">0</span> 漏: <span id="wk-miss" style="color:var(--red)">0</span></span>
+        </div>
+        <div class="whack-grid" id="wk-grid">
+          ${Array.from({length:9}, (_,i) => `<div class="whack-hole" data-hole="${i}"></div>`).join('')}
+        </div>
+        <button class="btn danger small" id="wk-quit">退出</button>
+      </div>`;
+    this._bind();
+    this._nextRound();
+  }
+
+  _bind() {
+    $('#wk-grid').addEventListener('click', (e) => {
+      const hole = e.target.closest('.whack-hole');
+      if (!hole) return;
+      const idx = parseInt(hole.dataset.hole);
+      if (idx === this.activeHole) {
+        this.hits++;
+        this.score += 100;
+        hole.classList.add('hit');
+        setTimeout(() => hole.classList.remove('hit'), 150);
+        this.activeHole = -1;
+        clearTimeout(this.roundTimer);
+        this.currentRound++;
+        $('#wk-score').textContent = this.score;
+        $('#wk-hits').textContent = this.hits;
+        $('#wk-rounds').textContent = `第 ${this.currentRound}/${this.rounds} 轮`;
+        if (this.currentRound >= this.rounds) { this._end(); return; }
+        setTimeout(() => this._nextRound(), 300);
+      }
+    });
+    $('#wk-quit').addEventListener('click', () => { clearTimeout(this.roundTimer); this._end(); });
+  }
+
+  _nextRound() {
+    // Clear active
+    document.querySelectorAll('.whack-hole').forEach(h => h.classList.remove('active'));
+    // Random hole
+    this.activeHole = Math.floor(Math.random()*9);
+    const hole = $(`.whack-hole[data-hole="${this.activeHole}"]`);
+    if (hole) hole.classList.add('active');
+    // Timer
+    this.roundTimer = setTimeout(() => {
+      this.misses++;
+      $('#wk-miss').textContent = this.misses;
+      document.querySelectorAll('.whack-hole').forEach(h => h.classList.remove('active'));
+      this.currentRound++;
+      $('#wk-rounds').textContent = `第 ${this.currentRound}/${this.rounds} 轮`;
+      if (this.currentRound >= this.rounds) { this._end(); return; }
+      setTimeout(() => this._nextRound(), 300);
+    }, this.roundTime);
+  }
+
+  _end() {
+    clearTimeout(this.roundTimer);
+    this.stop();
+    endGame(this.score);
+  }
+}
+
+// ============================================================
+//  GAME 6: 故事解谜 (DOM)
+// ============================================================
+class StoryGame extends BaseGame {
+  start() {
+    super.start();
+    this.scene = 'start';
+    this.inventory = [];
+    this.decisions = 0;
+  }
+
+  _story() {
+    const scenes = {
+      start: {
+        text: '深夜，你收到一条匿名消息：\n"老图书馆地下室藏着秘密。午夜12点，一个人来，带手电筒。"\n\n你站在废弃图书馆的铁门前，冷风穿过破窗。',
+        choices: [
+          { text: '推开铁门进去', next: 'hall', score: 10 },
+          { text: '绕到后门', next: 'backdoor', score: 5 },
+          { text: '先观察四周', next: 'observe', score: 15 },
+        ]
+      },
+      hall: {
+        text: '大厅里满是灰尘和蛛网。月光从破窗洒入，照在一排排空书架上。\n\n角落里有张翻倒的桌子，桌下压着一本泛黄的日记。',
+        choices: [
+          { text: '捡起日记翻阅', next: 'diary', item: '旧日记', score: 20 },
+          { text: '直接走向地下室楼梯', next: 'stairs', score: 10 },
+        ]
+      },
+      backdoor: {
+        text: '后门半掩着。地上有一串湿润的脚印，通向地下室方向。\n\n你注意到门把手上系着一张纸条。',
+        choices: [
+          { text: '取下纸条查看', next: 'note', score: 15 },
+          { text: '跟着脚印走', next: 'stairs', score: 10 },
+        ]
+      },
+      observe: {
+        text: '你环顾四周。围墙边有棵歪脖子树，树枝伸向二楼破碎的窗户。\n\n地上散落着烟蒂，还很新鲜。你听到了若有若无的滴水声。',
+        choices: [
+          { text: '爬树进入二楼窗户', next: 'secondfloor', score: 25 },
+          { text: '推开铁门从正门进入', next: 'hall', score: 10 },
+        ]
+      },
+      diary: {
+        text: '日记最后一页写着：\n"他们把东西藏在B区3号书架后面的暗格里。密码是我的生日——倒过来写。但必须在天亮前拿到，否则……"\n\n后面的字迹被水浸模糊了。',
+        choices: [
+          { text: '前往地下室B区', next: 'basement', score: 20 },
+          { text: '先在图书馆里寻找更多线索', next: 'secondfloor', score: 15 },
+        ]
+      },
+      note: {
+        text: '纸条上写着：\n"小心那个戴眼镜的人。他每天晚上都会来。如果遇到他，就说你是来借书的——但他知道图书馆十年前就关闭了。"',
+        choices: [
+          { text: '前往地下室', next: 'basement', score: 15 },
+          { text: '先搜查一楼', next: 'hall', score: 10 },
+        ]
+      },
+      secondfloor: {
+        text: '二楼阅览室里有一盏台灯亮着。桌上摊着几份旧报纸，头条是："本市著名学者失踪，警方在图书馆地下室发现密室"。\n\n日期是十二年前的今天。',
+        choices: [
+          { text: '仔细阅读报纸', next: 'newspaper', score: 25 },
+          { text: '直接去地下室', next: 'basement', score: 15 },
+        ]
+      },
+      newspaper: {
+        text: '报纸详细报道：学者在失踪前研究"集体潜意识的实证测量"。\n他的实验室就在图书馆地下室。失踪当晚，邻居听到地下室传来合唱般的低语声，持续数小时。\n\n你注意到报道旁边手写着："他们还在下面。"',
+        choices: [
+          { text: '鼓起勇气进入地下室', next: 'basement', score: 30 },
+        ]
+      },
+      stairs: {
+        text: '通往地下室的楼梯又窄又陡。空气越来越冷，呼吸凝成白雾。\n\n你听到下面传来微弱的合唱声……像很多人在同时低语。\n\n楼梯底部有一道铁门，半开着。',
+        choices: [
+          { text: '推门进入', next: 'basement', score: 15 },
+        ]
+      },
+      basement: {
+        text: '地下室里整齐排列着数十把椅子，全部面向房间中央的一个讲台。\n讲台上放着一个铁盒子。盒子是热的，微微震动。\n\n你走近的瞬间，低语声停止了。\n\n铁盒盖上刻着一行字：\n"唤醒者，你终于来了。我们等你很久了。"',
+        choices: [
+          { text: '打开铁盒', next: 'ending_open', score: 50 },
+          { text: '转身逃离', next: 'ending_flee', score: 0 },
+        ]
+      },
+      ending_open: {
+        text: '你打开了铁盒。\n\n里面是一面镜子。\n\n你看到了自己的脸——但眼中有光。\n\n身后的椅子上，空无一人。\n然而你清晰地感觉到，数十双眼睛正看着你。\n\n低语声在脑海中响起：\n"现在，轮到你来叫醒下一个人了。"\n\n（完）',
+        choices: []
+      },
+      ending_flee: {
+        text: '你转身狂奔，冲上楼梯，穿过大厅，冲出铁门。\n\n气喘吁吁地靠在围墙上，你回头望去——\n图书馆静静地矗立在月光中，一切如常。\n\n但你的口袋里多了一张纸条：\n"下次再来。我们有时间。"\n\n（完）',
+        choices: []
+      },
+    };
+    return scenes;
+  }
+
+  renderDOM(app) {
+    app.innerHTML = `
+      <div class="screen active" style="gap:12px">
+        <div class="game-header">
+          <span class="info">📖 故事解谜</span>
+          <span class="score" id="st-score">0</span>
+          <span class="info" id="st-inv"></span>
+        </div>
+        <div class="text-box" id="st-box"></div>
+        <div id="st-choices"></div>
+        <button class="btn small" id="st-quit">退出</button>
+      </div>`;
+    this._renderScene();
+    $('#st-quit').addEventListener('click', () => {
+      const choices = this._story()[this.scene]?.choices || [];
+      if (choices.length === 0) { this.stop(); endGame(this.score); }
+    });
+  }
+
+  _renderScene() {
+    const scenes = this._story();
+    const scene = scenes[this.scene];
+    if (!scene) return;
+
+    $('#st-box').innerHTML = scene.text.replace(/\n/g, '<br>');
+    $('#st-score').textContent = this.score;
+    $('#st-inv').textContent = this.inventory.length ? `🎒 ${this.inventory.join(', ')}` : '';
+
+    const choicesDiv = $('#st-choices');
+    choicesDiv.innerHTML = '';
+    if (scene.choices.length === 0) {
+      choicesDiv.innerHTML = '<button class="btn accent" id="st-end">查看结果</button>';
+      $('#st-end').addEventListener('click', () => { this.stop(); endGame(this.score); });
+      $('#st-quit').textContent = '返回主菜单';
+      return;
+    }
+
+    for (const ch of scene.choices) {
+      const btn = el('button', 'choice-btn', ch.text);
+      btn.addEventListener('click', () => {
+        this.score += ch.score || 0;
+        this.decisions++;
+        if (ch.item) this.inventory.push(ch.item);
+        this.scene = ch.next;
+        this._renderScene();
+      });
+      choicesDiv.appendChild(btn);
+    }
+  }
+}
+
+// ============================================================
+//  GAME 7: 贪吃蛇记忆 (Canvas)
+// ============================================================
+class MemorySnakeGame extends BaseGame {
+  start() {
+    super.start();
+    this.canvasW = 480; this.canvasH = 480;
+    this.gridSize = 20;
+    this.cols = this.canvasW / this.gridSize;
+    this.rows = this.canvasH / this.gridSize;
+    this.snake = [{x:3,y:10},{x:2,y:10},{x:1,y:10}];
+    this.dir = {x:1,y:0};
+    this.nextDir = {x:1,y:0};
+    this.apple = this._randomApple();
+    this.sequence = [];
+    this.sequenceIndex = 0;
+    this.showSequence = true;
+    this.showTimer = 0;
+    this.sequenceDuration = 60; // frames
+    this.totalApples = this.difficulty==='hard'?8:this.difficulty==='normal'?6:4;
+    this.eaten = 0;
+    this.keys = {};
+    this.frameCount = 0;
+    this.speed = this.difficulty==='hard'?8:this.difficulty==='normal'?10:14;
+    this._generateSequence();
+  }
+
+  _randomApple() {
+    let pos;
+    do {
+      pos = {x:Math.floor(Math.random()*this.cols), y:Math.floor(Math.random()*this.rows)};
+    } while (this.snake.some(s => s.x===pos.x && s.y===pos.y));
+    return pos;
+  }
+
+  _generateSequence() {
+    this.sequence = [];
+    for (let i = 0; i < this.totalApples; i++) {
+      this.sequence.push(this._randomApple());
+    }
+    // Use first apple of sequence
+    this.apple = {...this.sequence[0]};
+  }
+
+  renderDOM(app) {
+    app.innerHTML = `
+      <div class="screen active" style="gap:8px">
+        <div class="game-header">
+          <span class="info" id="sn-info">🍎 按顺序吃苹果!</span>
+          <span class="score" id="sn-score">0</span>
+          <span class="info">第 <span id="sn-progress" style="color:var(--accent)">1</span>/${this.totalApples}</span>
+        </div>
+        <canvas id="sn-canvas" width="${this.canvasW}" height="${this.canvasH}"></canvas>
+        <div class="help-bar">方向键移动 | 按顺序吃苹果</div>
+      </div>`;
+    this.canvas = $('#sn-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this._bindInput();
+    this._loop();
+  }
+
+  _bindInput() {
+    window._snKey = (e) => {
+      const map = {ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0}};
+      const nd = map[e.key];
+      if (nd && !(nd.x===-this.dir.x && nd.y===-this.dir.y)) {
+        this.nextDir = nd;
+      }
+    };
+    document.addEventListener('keydown', window._snKey);
+  }
+
+  _unbindInput() { document.removeEventListener('keydown', window._snKey); }
+
+  _loop() {
+    if (!this.running) { this._unbindInput(); return; }
+    this.frameCount++;
+    if (this.frameCount % this.speed === 0) this.update();
+    this._draw();
+    if (this.running) requestAnimationFrame(() => this._loop());
+  }
+
+  update() {
+    if (this.showSequence) {
+      this.showTimer++;
+      if (this.showTimer >= this.sequenceDuration) {
+        this.showSequence = false;
+        $('#sn-info').textContent = '🎮 开始行动!';
+      }
+      return;
+    }
+
+    this.dir = {...this.nextDir};
+    const head = {x:this.snake[0].x+this.dir.x, y:this.snake[0].y+this.dir.y};
+
+    // Wall collision
+    if (head.x<0||head.x>=this.cols||head.y<0||head.y>=this.rows) { this.stop(); endGame(this.score); return; }
+    // Self collision
+    if (this.snake.some(s => s.x===head.x && s.y===head.y)) { this.stop(); endGame(this.score); return; }
+
+    this.snake.unshift(head);
+
+    // Apple
+    if (head.x===this.apple.x && head.y===this.apple.y) {
+      if (this.sequenceIndex === this.eaten) {
+        this.score += 100;
+        this.eaten++;
+        this.sequenceIndex = this.eaten;
+        $('#sn-score').textContent = this.score;
+        $('#sn-progress').textContent = this.eaten + 1;
+        if (this.eaten >= this.totalApples) {
+          this.score += 500;
+          this.stop();
+          endGame(this.score);
+          return;
+        }
+        this.apple = {...this.sequence[this.eaten]};
+      } else {
+        // Wrong order penalty
+        this.score = Math.max(0, this.score - 50);
+        $('#sn-score').textContent = this.score;
+        this.snake.pop(); // don't grow, but also don't remove tail for wrong apple
+      }
+    } else {
+      this.snake.pop();
+    }
+  }
+
+  _draw() {
+    const ctx = this.ctx, gs = this.gridSize;
+    ctx.clearRect(0, 0, this.canvasW, this.canvasH);
+
+    // Grid
+    ctx.strokeStyle = '#151530';
+    ctx.lineWidth = 0.5;
+    for (let x=0; x<this.cols; x++) { ctx.beginPath(); ctx.moveTo(x*gs,0); ctx.lineTo(x*gs,this.canvasH); ctx.stroke(); }
+    for (let y=0; y<this.rows; y++) { ctx.beginPath(); ctx.moveTo(0,y*gs); ctx.lineTo(this.canvasW,y*gs); ctx.stroke(); }
+
+    if (this.showSequence) {
+      // Show all sequence apples
+      for (let i = 0; i < this.sequence.length; i++) {
+        const a = this.sequence[i];
+        const alpha = 0.3 + 0.7 * (i / this.sequence.length);
+        ctx.fillStyle = `rgba(255,215,64,${alpha})`;
+        ctx.fillRect(a.x*gs+2, a.y*gs+2, gs-4, gs-4);
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(i+1, a.x*gs+gs/2, a.y*gs+gs/2);
+      }
+      $('#sn-info').textContent = '👀 记住顺序!';
+    } else {
+      // Current apple (with order number)
+      ctx.fillStyle = '#ffd740';
+      ctx.fillRect(this.apple.x*gs+2, this.apple.y*gs+2, gs-4, gs-4);
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.eaten+1, this.apple.x*gs+gs/2, this.apple.y*gs+gs/2);
+    }
+
+    // Snake
+    for (let i = 0; i < this.snake.length; i++) {
+      const s = this.snake[i];
+      const alpha = 1 - i * 0.07;
+      ctx.fillStyle = i===0 ? '#00e5ff' : `rgba(0,229,255,${Math.max(0.2, alpha)})`;
+      ctx.fillRect(s.x*gs+1, s.y*gs+1, gs-2, gs-2);
+    }
+  }
+
+  stop() { super.stop(); this._unbindInput(); }
+}
+
+// ============================================================
+//  Global Key Handler (for game inputs + quit)
+// ============================================================
+document.addEventListener('keydown', (e) => {
+  if (state.screen !== 'game' || !activeGame || !activeGame.running) return;
+  if (e.key === 'q' || e.key === 'Q' || e.key === 'Escape') {
+    activeGame.stop();
+    state.screen = 'menu';
+    render();
+    return;
+  }
+  activeGame.handleInput(e.key);
+});
+
+// ============================================================
+//  Init
+// ============================================================
+render();
+</script>
+</body>
+</html>
